@@ -34,7 +34,13 @@ const videoStorage = createStorage("uploads/videos");
 const videoUpload = multer({
   storage: videoStorage,
   fileFilter: (req, file, cb) => {
-    const allowedTypes = ["video/mp4", "video/webm", "video/quicktime"];
+    const allowedTypes = [
+      "video/mp4",
+      "video/webm",
+      "video/quicktime",
+      "video/avi",
+      "video/x-matroska",
+    ];
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
