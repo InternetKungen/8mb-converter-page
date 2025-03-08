@@ -51,7 +51,7 @@ const videoUpload = multer({
 });
 
 // Funktion för att komprimera videon
-const compressVideo = (inputPath, outputPath, maxSizeMb) => {
+const compressVideo = (inputPath, outputPath, maxSizeMb, maxDuration = 30) => {
   return new Promise((resolve, reject) => {
     // Få information om ursprungsfilen för att beräkna bithastighet
     ffmpeg.ffprobe(inputPath, (err, metadata) => {
@@ -60,7 +60,7 @@ const compressVideo = (inputPath, outputPath, maxSizeMb) => {
         return reject(err);
       }
 
-      const duration = metadata.format.duration;
+      const duration = Math.min(metadata.format.duration, maxDuration);
       // Beräkna bitrate för att få ungefär maxSizeMb storlek
       // 8 * maxSizeMb * 1024 * 1024 = önskad filstorlek i bitar
       // Dividera med duration för att få bitar per sekund
@@ -71,13 +71,16 @@ const compressVideo = (inputPath, outputPath, maxSizeMb) => {
       console.log(`Längd: ${duration}s, Målbitrate: ${targetBitrate}bps`);
 
       ffmpeg(inputPath)
+        .setStartTime(0) // Starta från början
+        .setDuration(duration) // Klipp till maxDuration sekunder
         .output(outputPath)
         .videoCodec("libx264") // Använd x264 för att komprimera
         .audioCodec("aac") // Komprimera ljudet med AAC
-        .audioBitrate("128k") // Standardisera ljudbitrate
+        .audioBitrate("96k") // Standardisera ljudbitrate
         .videoBitrate(targetBitrate) // Använd beräknad bitrate
         .outputOptions([
-          "-preset medium", // Balans mellan komprimeringstid och -kvalitet
+          "-preset slow", // Balans mellan komprimeringstid och -kvalitet
+          "-crf 28", // Högre värde = bättre kompression, sämre kvalitet
           "-movflags +faststart", // Optimera för webbuppspelning
           "-pix_fmt yuv420p", // Standardisera pixelformat för bättre kompatibilitet
         ])
@@ -121,7 +124,7 @@ router.post("/video", videoUpload.single("videoFile"), async (req, res) => {
 
   try {
     // Komprimera videon
-    await compressVideo(uploadedVideoPath, outputVideoPath, 8); // Maxstorlek 8MB
+    await compressVideo(uploadedVideoPath, outputVideoPath, 8, 30); // Maxstorlek 8MB
 
     res.json({
       message: "Video konverterad och uppladdad",
