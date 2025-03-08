@@ -2,6 +2,7 @@ import express from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import ffmpeg from "fluent-ffmpeg";
 
 const router = express.Router();
 
@@ -21,7 +22,10 @@ const createStorage = (uploadDir) =>
     filename: (req, file, cb) => {
       // Skapa unikt filnamn
       const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-      cb(null, file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname));
+      cb(
+        null,
+        file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname)
+      );
     },
   });
 
@@ -40,16 +44,62 @@ const videoUpload = multer({
   limits: { fileSize: 1000 * 1024 * 1024 }, // 1000 MB max storlek
 });
 
+// Funktion för att komprimera videon
+const compressVideo = (inputPath, outputPath, maxSizeMb) => {
+  return new Promise((resolve, reject) => {
+    ffmpeg(inputPath)
+      .output(outputPath)
+      .videoCodec("libx264") // Använd x264 för att komprimera
+      .audioCodec("aac") // Komprimera ljudet med AAC
+      .size(`?${maxSizeMb}M`) // Sätt maxstorleken (t.ex. 8MB)
+      .on("end", () => {
+        console.log("Video komprimerad");
+        resolve(outputPath);
+      })
+      .on("error", (err) => {
+        console.error("Fel vid komprimering av video:", err);
+        reject(err);
+      })
+      .run();
+  });
+};
+
 // Video-uppladdningsroute
-router.post("/video", videoUpload.single("videoFile"), (req, res) => {
+router.post("/video", videoUpload.single("videoFile"), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: "Ingen fil har laddats upp" });
   }
 
-  res.json({
-    filename: req.file.filename,
-    path: `/public/uploads/videos/${req.file.filename}`,
-  });
+  // Sätt filens path
+  const uploadedVideoPath = path.resolve(
+    "public",
+    "uploads",
+    "videos",
+    req.file.filename
+  );
+
+  // Sätt output path för den komprimerade videon
+  const outputVideoPath = path.resolve(
+    "public",
+    "uploads",
+    "videos",
+    "compressed-" + req.file.filename
+  );
+
+  try {
+    // Komprimera videon
+    await compressVideo(uploadedVideoPath, outputVideoPath, 8); // Maxstorlek 8MB
+
+    res.json({
+      message: "Video konverterad och uppladdad",
+      filename: "compressed-" + req.file.filename,
+      path: `/public/uploads/videos/compressed-${req.file.filename}`,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Fel vid komprimering av video", error: error.message });
+  }
 });
 
 export default router;
