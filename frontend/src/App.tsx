@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import "./App.css";
+import logoImage from "./assets/img/8mb-converter-page.png";
 
 function App() {
   const [file, setFile] = useState<File | null>(null);
@@ -70,6 +71,13 @@ function App() {
 
   return (
     <div className="app">
+      <div className="logo">
+        <img
+          className="logo-img"
+          src={logoImage}
+          alt="8MB Video converter logo"
+        />
+      </div>
       <div className="container">
         <h2>8MB Video converter</h2>
         {/* Drag & Drop Area */}
