@@ -71,7 +71,19 @@ function App() {
           )}
         </div>
         {/* Alternativ: Välj fil via knapp */}
-        <input type="file" accept="video/*" onChange={handleFileChange} />
+        <input
+          type="file"
+          accept="video/*"
+          onChange={handleFileChange}
+          style={{ display: "none" }} // Döljer den ursprungliga filväljaren
+          id="file-upload"
+        />
+
+        <label htmlFor="file-upload" className="custom-file-upload">
+          {file ? file.name : "Välj en fil"}
+        </label>
+
+        {/* <input type="file" accept="video/*" onChange={handleFileChange} /> */}
 
         <button onClick={handleUpload} disabled={!file || uploading}>
           {uploading ? "Laddar upp..." : "Ladda upp"}

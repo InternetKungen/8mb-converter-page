@@ -15,27 +15,13 @@
   align-items: center;
   background: linear-gradient(to top, #011524, #224674);
   height: fit-content;
-  width: fit-content;
+  width: 500px;
+  max-width: 100%;
   color: white;
   border-radius: 10px;
   border: 3px double orange;
   gap: 20px;
   padding: 20px;
-}
-
-.container button {
-  width: fit-content;
-  height: fit-content;
-  padding: 20px;
-  background: linear-gradient(to top, orange, #ffffff);
-  color: #011524;
-  border-radius: 10px;
-  border: 2px solid orange;
-  cursor: pointer;
-  text-transform: uppercase;
-  font-weight: 1000;
-  text-shadow: 1px 1px 0px #ffa500, -1px -1px 0px #ffa500, 1px -1px 0px #ffa500,
-    -1px 1px 0px #ffa500;
 }
 
 .dropzone {
@@ -51,6 +37,29 @@
   padding: 20px;
   margin: 20px;
   cursor: pointer;
+  width: 90%;
+  height: 100px;
+}
+
+.dropzone:hover {
+  border-color: #646cff;
+}
+
+button {
+  width: 200px;
+  min-width: -webkit-fill-available;
+  min-width: fit-content;
+  height: fit-content;
+  padding: 20px;
+  background: linear-gradient(to top, orange, #ffffff);
+  color: #011524;
+  border-radius: 10px;
+  border: 2px solid orange;
+  cursor: pointer;
+  text-transform: uppercase;
+  font-weight: 1000;
+  text-shadow: 1px 1px 0px #ffa500, -1px -1px 0px #ffa500, 1px -1px 0px #ffa500,
+    -1px 1px 0px #ffa500;
 }
 
 button:hover {
@@ -59,4 +68,29 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+input[type="file"] {
+  display: none;
+}
+
+.custom-file-upload {
+  display: inline-block;
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  font-size: 16px;
+  text-align: center;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.custom-file-upload:hover {
+  background-color: #0056b3;
 }
