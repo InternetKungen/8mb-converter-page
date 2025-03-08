@@ -1,10 +1,62 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+.app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: orange;
+  height: 100vh;
 }
 
-.app {
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(to top, #011524, #224674);
+  height: fit-content;
+  width: fit-content;
+  color: white;
+  border-radius: 10px;
+  border: 3px double orange;
+  gap: 20px;
   padding: 20px;
+}
+
+.container button {
+  width: fit-content;
+  height: fit-content;
+  padding: 20px;
+  background: linear-gradient(to top, orange, #ffffff);
+  color: #011524;
+  border-radius: 10px;
+  border: 2px solid orange;
+  cursor: pointer;
+  text-transform: uppercase;
+  font-weight: 1000;
+  text-shadow: 1px 1px 0px #ffa500, -1px -1px 0px #ffa500, 1px -1px 0px #ffa500,
+    -1px 1px 0px #ffa500;
+}
+
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: white;
+  background: linear-gradient(to bottom, #011524, #224674);
+  border-radius: 10px;
+  border: 3px dotted orange;
+  padding: 20px;
+  margin: 20px;
+  cursor: pointer;
+}
+
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
 }
