@@ -53,20 +53,47 @@ const videoUpload = multer({
 // Funktion för att komprimera videon
 const compressVideo = (inputPath, outputPath, maxSizeMb) => {
   return new Promise((resolve, reject) => {
-    ffmpeg(inputPath)
-      .output(outputPath)
-      .videoCodec("libx264") // Använd x264 för att komprimera
-      .audioCodec("aac") // Komprimera ljudet med AAC
-      .size(`?${maxSizeMb}M`) // Sätt maxstorleken (t.ex. 8MB)
-      .on("end", () => {
-        console.log("Video komprimerad");
-        resolve(outputPath);
-      })
-      .on("error", (err) => {
-        console.error("Fel vid komprimering av video:", err);
-        reject(err);
-      })
-      .run();
+    // Få information om ursprungsfilen för att beräkna bithastighet
+    ffmpeg.ffprobe(inputPath, (err, metadata) => {
+      if (err) {
+        console.error("Fel vid analys av video:", err);
+        return reject(err);
+      }
+
+      const duration = metadata.format.duration;
+      // Beräkna bitrate för att få ungefär maxSizeMb storlek
+      // 8 * maxSizeMb * 1024 * 1024 = önskad filstorlek i bitar
+      // Dividera med duration för att få bitar per sekund
+      const targetBitrate = Math.floor(
+        (8 * maxSizeMb * 1024 * 1024) / duration
+      );
+
+      console.log(`Längd: ${duration}s, Målbitrate: ${targetBitrate}bps`);
+
+      ffmpeg(inputPath)
+        .output(outputPath)
+        .videoCodec("libx264") // Använd x264 för att komprimera
+        .audioCodec("aac") // Komprimera ljudet med AAC
+        .audioBitrate("128k") // Standardisera ljudbitrate
+        .videoBitrate(targetBitrate) // Använd beräknad bitrate
+        .outputOptions([
+          "-preset medium", // Balans mellan komprimeringstid och -kvalitet
+          "-movflags +faststart", // Optimera för webbuppspelning
+          "-pix_fmt yuv420p", // Standardisera pixelformat för bättre kompatibilitet
+        ])
+        .on("progress", (progress) => {
+          console.log(`Behandlar: ${progress.percent}% färdig`);
+        })
+        .on("end", () => {
+          console.log("Video komprimerad");
+          resolve(outputPath);
+        })
+        .on("error", (err) => {
+          console.error("Fel vid komprimering av video:", err);
+          reject(err);
+        })
+        .run();
+    });
   });
 };
 

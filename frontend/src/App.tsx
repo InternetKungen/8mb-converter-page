@@ -51,10 +51,18 @@ function App() {
         setMessage(`Uppladdning lyckades: ${data.filename}`);
         setDownloadLink(data.path);
       } else {
-        setMessage(`Fel: ${data.message}`);
+        setMessage(
+          `Fel: ${data.message}, Detaljer: ${JSON.stringify(data.error)}`
+        );
+        console.error("Serverfel:", data);
       }
     } catch (error) {
-      setMessage("Något gick fel vid uppladdning.");
+      console.error("Klientfel:", error);
+      setMessage(
+        `Något gick fel vid uppladdning: ${
+          error instanceof Error ? error.message : "Okänt fel"
+        }`
+      );
     } finally {
       setUploading(false);
     }
