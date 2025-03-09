@@ -3,6 +3,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import ffmpeg from "fluent-ffmpeg";
+import { wss } from "../index.js";
 
 const router = express.Router();
 
@@ -50,6 +51,15 @@ const videoUpload = multer({
   limits: { fileSize: 1000 * 1024 * 1024 }, // 1000 MB max storlek
 });
 
+// Uppdatera WebSocket-klienter
+const broadcastProgress = (progress) => {
+  wss.clients.forEach((client) => {
+    if (client.readyState === 1) {
+      client.send(JSON.stringify({ progress }));
+    }
+  });
+};
+
 // Funktion för att komprimera videon
 const compressVideo = (inputPath, outputPath, maxSizeMb, maxDuration = 30) => {
   return new Promise((resolve, reject) => {
@@ -86,6 +96,7 @@ const compressVideo = (inputPath, outputPath, maxSizeMb, maxDuration = 30) => {
         ])
         .on("progress", (progress) => {
           console.log(`Behandlar: ${progress.percent}% färdig`);
+          broadcastProgress(progress.percent);
         })
         .on("end", () => {
           console.log("Video komprimerad");
@@ -124,7 +135,7 @@ router.post("/video", videoUpload.single("videoFile"), async (req, res) => {
 
   try {
     // Komprimera videon
-    await compressVideo(uploadedVideoPath, outputVideoPath, 8, 30); // Maxstorlek 8MB
+    await compressVideo(uploadedVideoPath, outputVideoPath, 7, 30); // Maxstorlek 8MB
 
     res.json({
       message: "Video konverterad och uppladdad",
