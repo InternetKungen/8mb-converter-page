@@ -135,7 +135,7 @@ router.post("/video", videoUpload.single("videoFile"), async (req, res) => {
 
   try {
     // Komprimera videon
-    await compressVideo(uploadedVideoPath, outputVideoPath, 7, 30); // Maxstorlek 8MB
+    await compressVideo(uploadedVideoPath, outputVideoPath, 6, 30); // Maxstorlek 8MB
 
     res.json({
       message: "Video konverterad och uppladdad",
