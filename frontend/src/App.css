@@ -200,6 +200,13 @@ input[type="file"] {
   border-radius: 10px;
   overflow: hidden;
   margin-top: 10px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s ease-in-out;
+}
+
+.progress-container.show {
+  max-height: 100px;
 }
 
 .progress-bar {
@@ -229,14 +236,7 @@ input[type="file"] {
 
 .download-button {
   display: inline-block;
-  /* padding: 10px 20px; */
-  /* background-color: #4caf50; */
-  /* color: white; */
-  /* font-size: 16px; */
-  /* font-weight: bold; */
   text-decoration: none;
-  /* border-radius: 8px; */
-  /* transition: background-color 0.3s ease, transform 0.2s ease; */
   width: 200px;
   min-width: -webkit-fill-available;
   min-width: fit-content;

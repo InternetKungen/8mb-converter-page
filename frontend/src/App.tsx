@@ -9,6 +9,7 @@ function App() {
   const [message, setMessage] = useState("");
   const [downloadLink, setDownloadLink] = useState<string | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
+  const [showProgress, setShowProgress] = useState(false);
 
   useEffect(() => {
     const ws = new WebSocket(import.meta.env.VITE_WS_URL);
@@ -22,6 +23,12 @@ function App() {
 
     return () => ws.close();
   }, []);
+
+  useEffect(() => {
+    setDownloadLink(null);
+    setProgress(null);
+    setShowProgress(false);
+  }, [file]);
 
   // Hantera filer via drag & drop
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -48,8 +55,10 @@ function App() {
     }
 
     setUploading(true);
+    setShowProgress(true);
     setMessage("");
     setDownloadLink(null);
+    setProgress(0);
 
     const formData = new FormData();
     formData.append("videoFile", file);
@@ -118,11 +127,21 @@ function App() {
 
         {/* <input type="file" accept="video/*" onChange={handleFileChange} /> */}
 
-        <button onClick={handleUpload} disabled={!file || uploading}>
-          {uploading ? "Laddar upp..." : "Ladda upp"}
+        <button
+          onClick={handleUpload}
+          disabled={!!downloadLink || !file || uploading}
+        >
+          {downloadLink
+            ? "Färdig"
+            : uploading
+            ? progress !== null
+              ? "Konverterar..."
+              : "Laddar upp..."
+            : "Ladda upp"}
         </button>
 
-        <div className="progress-container">
+        {/* Progress container med animation */}
+        <div className={`progress-container ${showProgress ? "show" : ""}`}>
           <div className="progress-bar" style={{ width: `${progress}%` }}></div>
           <div className="progress-text">
             {progress !== null && (
