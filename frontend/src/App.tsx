@@ -1,11 +1,34 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import "./App.css";
+import logoImage from "./assets/img/8mb-converter-page.png";
 
 function App() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
+  const [downloadLink, setDownloadLink] = useState<string | null>(null);
+  const [progress, setProgress] = useState<number | null>(null);
+  const [showProgress, setShowProgress] = useState(false);
+
+  useEffect(() => {
+    const ws = new WebSocket(import.meta.env.VITE_WS_URL);
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.progress !== undefined) {
+        setProgress(data.progress);
+      }
+    };
+
+    return () => ws.close();
+  }, []);
+
+  useEffect(() => {
+    setDownloadLink(null);
+    setProgress(null);
+    setShowProgress(false);
+  }, [file]);
 
   // Hantera filer via drag & drop
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -32,7 +55,10 @@ function App() {
     }
 
     setUploading(true);
+    setShowProgress(true);
     setMessage("");
+    setDownloadLink(null);
+    setProgress(0);
 
     const formData = new FormData();
     formData.append("videoFile", file);
@@ -47,11 +73,20 @@ function App() {
 
       if (response.ok) {
         setMessage(`Uppladdning lyckades: ${data.filename}`);
+        setDownloadLink(data.path);
       } else {
-        setMessage(`Fel: ${data.message}`);
+        setMessage(
+          `Fel: ${data.message}, Detaljer: ${JSON.stringify(data.error)}`
+        );
+        console.error("Serverfel:", data);
       }
     } catch (error) {
-      setMessage("Något gick fel vid uppladdning.");
+      console.error("Klientfel:", error);
+      setMessage(
+        `Något gick fel vid uppladdning: ${
+          error instanceof Error ? error.message : "Okänt fel"
+        }`
+      );
     } finally {
       setUploading(false);
     }
@@ -59,8 +94,15 @@ function App() {
 
   return (
     <div className="app">
+      <div className="logo">
+        <img
+          className="logo-img"
+          src={logoImage}
+          alt="8MB Video converter logo"
+        />
+      </div>
       <div className="container">
-        <h2>8MB Video converter</h2>
+        <h2>8MB Video Converter</h2>
         {/* Drag & Drop Area */}
         <div {...getRootProps()} className="dropzone">
           <input {...getInputProps()} />
@@ -85,10 +127,42 @@ function App() {
 
         {/* <input type="file" accept="video/*" onChange={handleFileChange} /> */}
 
-        <button onClick={handleUpload} disabled={!file || uploading}>
-          {uploading ? "Laddar upp..." : "Ladda upp"}
+        <button
+          onClick={handleUpload}
+          disabled={!!downloadLink || !file || uploading}
+        >
+          {downloadLink
+            ? "Färdig"
+            : uploading
+            ? progress !== null
+              ? "Konverterar..."
+              : "Laddar upp..."
+            : "Ladda upp"}
         </button>
-        {message && <p>{message}</p>}
+
+        {/* Progress container med animation */}
+        <div className={`progress-container ${showProgress ? "show" : ""}`}>
+          <div className="progress-bar" style={{ width: `${progress}%` }}></div>
+          <div className="progress-text">
+            {progress !== null && (
+              <p>
+                Konverteringsprogress:{" "}
+                {downloadLink ? "100" : progress.toFixed(1)}%
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="progress-message">{message && <p>{message}</p>}</div>
+
+        {/* Visa nedladdningslänk om filen har konverterats */}
+        {downloadLink && (
+          <div className="download-container">
+            <a href={downloadLink} download className="download-button">
+              ⬇ Hämta video
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );
