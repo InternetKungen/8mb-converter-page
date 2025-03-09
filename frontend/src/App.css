@@ -19,14 +19,27 @@
   max-width: 100%;
   color: white;
   border-radius: 10px;
-  border: 3px double #ff6300;
+  outline: 3px double #ff6300;
   gap: 20px;
   padding: 20px;
-  transition: border-color 0.3s ease;
+  transition: outline-color 0.3s ease, outline-width 0.3s ease;
 }
 
 .container:hover {
-  border-color: #fac100;
+  outline-color: #fac100;
+  outline-width: 10px;
+}
+
+.container h2 {
+  color: #ffffff;
+  text-shadow: 1px 1px 0px #ff6300, -1px -1px 0px #ff6300, 1px -1px 0px #ff6300,
+    -1px 1px 0px #ff6300;
+}
+
+.container p {
+  color: #ffffff;
+  text-shadow: 1px 1px 0px #3d314a, -1px -1px 0px #3d314a, 1px -1px 0px #3d314a,
+    -1px 1px 0px #3d314a;
 }
 
 .dropzone {
@@ -69,15 +82,16 @@ button {
   font-weight: 1000;
   text-shadow: 1px 1px 0px #3d314a, -1px -1px 0px #3d314a, 1px -1px 0px #3d314a,
     -1px 1px 0px #3d314a;
-  transition: border-color 0.3s ease;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
 }
 
 button:hover {
   border-color: #fac100;
-  text-shadow: 1px 1px 0px #fac100, -1px -1px 0px #fac100, 1px -1px 0px #fac100,
-    -1px 1px 0px #fac100;
-  color: #3d314a;
-  background: linear-gradient(to top, #ff6300, #684756);
+  text-shadow: 1px 1px 0px #3d314a, -1px -1px 0px #3d314a, 1px -1px 0px #3d314a,
+    -1px 1px 0px #3d314a;
+  color: #ffffff;
+  background: linear-gradient(to top, #fac100, #fac100);
+  box-shadow: 0 0 30px #ff6300;
 }
 button:focus,
 button:focus-visible {
@@ -89,6 +103,12 @@ button:focus-visible {
 button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  border-color: #3d314a;
+  text-shadow: 1px 1px 0px #fac100, -1px -1px 0px #fac100, 1px -1px 0px #fac100,
+    -1px 1px 0px #fac100;
+  color: #3d314a;
+  background: linear-gradient(to top, #ff6300, #684756);
+  box-shadow: 0 0 0px #fac100;
 }
 
 input[type="file"] {
@@ -120,16 +140,137 @@ input[type="file"] {
   height: 1em;
   padding: 1.5em;
   will-change: filter;
-  transition: filter 300ms;
+  transition: filter 300ms, transform 300ms;
 }
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
+  animation: logoHover 300ms ease-in-out 1;
 }
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #3d314a);
 }
 
+@keyframes logoHover {
+  0% {
+    transform: translateY(-0.1em);
+  }
+  20% {
+    transform: translateY(0.2em);
+  }
+  60% {
+    transform: translateY(-0.1em);
+  }
+  80% {
+    transform: translateY(0.2em);
+  }
+  100% {
+    transform: translateY(-0.1em);
+  }
+}
+
+.logo:active,
+.logo:focus {
+  transform: scale(1.2);
+}
+
+/* @keyframes logoActive {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+} */
+
 .logo-img {
   height: 80px;
   width: 100%;
+}
+
+.progress-container {
+  position: relative;
+  width: 100%;
+  height: 20px;
+  background: #3d314a;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(to right, #ff6300, #fac100);
+  width: 0%;
+  transition: width 0.3s ease-in-out;
+}
+
+.progress-text {
+  position: absolute;
+  width: 100%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  font-weight: bold;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  font-size: 14px;
+}
+
+.download-container {
+  text-align: center;
+  margin-top: 15px;
+}
+
+.download-button {
+  display: inline-block;
+  /* padding: 10px 20px; */
+  /* background-color: #4caf50; */
+  /* color: white; */
+  /* font-size: 16px; */
+  /* font-weight: bold; */
+  text-decoration: none;
+  /* border-radius: 8px; */
+  /* transition: background-color 0.3s ease, transform 0.2s ease; */
+  width: 200px;
+  min-width: -webkit-fill-available;
+  min-width: fit-content;
+  height: fit-content;
+  padding: 20px;
+  background: linear-gradient(to top, #ff6300, #fac100);
+  color: #ffffff;
+  border-radius: 10px;
+  border: 2px solid #ff6300;
+  cursor: pointer;
+  text-transform: uppercase;
+  font-weight: 1000;
+  text-shadow: 1px 1px 0px #3d314a, -1px -1px 0px #3d314a, 1px -1px 0px #3d314a,
+    -1px 1px 0px #3d314a;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.1s ease,
+    background 0.3s ease;
+}
+
+.download-button:hover {
+  border-color: #fac100;
+  text-shadow: 1px 1px 0px #3d314a, -1px -1px 0px #3d314a, 1px -1px 0px #3d314a,
+    -1px 1px 0px #3d314a;
+  color: #ffffff;
+  background: linear-gradient(to top, #fac100, #fac100);
+  box-shadow: 0 0 30px #ff6300;
+}
+
+.download-button:active {
+  transform: scale(0.95);
+}
+
+.progress-message {
+  text-align: center;
+  margin-top: 10px;
+  font-weight: regular;
+  color: white;
+  /* text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); */
+  font-size: 14px;
 }

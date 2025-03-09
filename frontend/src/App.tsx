@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import "./App.css";
 import logoImage from "./assets/img/8mb-converter-page.png";
@@ -8,6 +8,20 @@ function App() {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
   const [downloadLink, setDownloadLink] = useState<string | null>(null);
+  const [progress, setProgress] = useState<number | null>(null);
+
+  useEffect(() => {
+    const ws = new WebSocket("ws://localhost:5000");
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.progress !== undefined) {
+        setProgress(data.progress);
+      }
+    };
+
+    return () => ws.close();
+  }, []);
 
   // Hantera filer via drag & drop
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -107,17 +121,29 @@ function App() {
         <button onClick={handleUpload} disabled={!file || uploading}>
           {uploading ? "Laddar upp..." : "Ladda upp"}
         </button>
-        {message && <p>{message}</p>}
+
+        <div className="progress-container">
+          <div className="progress-bar" style={{ width: `${progress}%` }}></div>
+          <div className="progress-text">
+            {progress !== null && (
+              <p>Konverteringsprogress: {progress.toFixed(1)}%</p>
+            )}
+          </div>
+        </div>
+
+        <div className="progress-message">{message && <p>{message}</p>}</div>
+        {/* <div>
+          {progress !== null && (
+            <p>Konverteringsprogress: {progress.toFixed(1)}%</p>
+          )}
+        </div> */}
 
         {/* Visa nedladdningslänk om filen har konverterats */}
         {downloadLink && (
-          <div>
-            <p>
-              Konverterad video är klar.{" "}
-              <a href={downloadLink} download>
-                Hämta här
-              </a>
-            </p>
+          <div className="download-container">
+            <a href={downloadLink} download className="download-button">
+              ⬇ Hämta video
+            </a>
           </div>
         )}
       </div>

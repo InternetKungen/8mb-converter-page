@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import http from "http";
 import path from "path";
 import uploadRouter from "./routes/upload.js";
+import { WebSocketServer } from "ws";
 
 dotenv.config();
 
@@ -35,3 +36,20 @@ server.listen(process.env.PORT, async () => {
     process.exit(1);
   }
 });
+
+// Skapa WebSocket-server
+const wss = new WebSocketServer({ server });
+
+wss.on("connection", (ws) => {
+  console.log("Ny WebSocket-anslutning");
+
+  ws.on("message", (message) => {
+    console.log("Mottaget meddelande:", message.toString());
+  });
+
+  ws.on("close", () => {
+    console.log("WebSocket-anslutning stängd");
+  });
+});
+
+export { wss };
