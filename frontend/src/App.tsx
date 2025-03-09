@@ -11,7 +11,7 @@ function App() {
   const [progress, setProgress] = useState<number | null>(null);
 
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:5000");
+    const ws = new WebSocket("wss://8mb.boxod.se");
 
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
