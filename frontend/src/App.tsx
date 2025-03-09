@@ -102,7 +102,7 @@ function App() {
         />
       </div>
       <div className="container">
-        <h2>8MB Video converter</h2>
+        <h2>8MB Video Converter</h2>
         {/* Drag & Drop Area */}
         <div {...getRootProps()} className="dropzone">
           <input {...getInputProps()} />
