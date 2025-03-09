@@ -11,7 +11,7 @@ function App() {
   const [progress, setProgress] = useState<number | null>(null);
 
   useEffect(() => {
-    const ws = new WebSocket("wss://8mb.boxod.se");
+    const ws = new WebSocket(import.meta.env.VITE_WS_URL);
 
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
@@ -126,17 +126,15 @@ function App() {
           <div className="progress-bar" style={{ width: `${progress}%` }}></div>
           <div className="progress-text">
             {progress !== null && (
-              <p>Konverteringsprogress: {progress.toFixed(1)}%</p>
+              <p>
+                Konverteringsprogress:{" "}
+                {downloadLink ? "100" : progress.toFixed(1)}%
+              </p>
             )}
           </div>
         </div>
 
         <div className="progress-message">{message && <p>{message}</p>}</div>
-        {/* <div>
-          {progress !== null && (
-            <p>Konverteringsprogress: {progress.toFixed(1)}%</p>
-          )}
-        </div> */}
 
         {/* Visa nedladdningslänk om filen har konverterats */}
         {downloadLink && (

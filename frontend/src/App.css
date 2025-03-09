@@ -82,7 +82,8 @@ button {
   font-weight: 1000;
   text-shadow: 1px 1px 0px #3d314a, -1px -1px 0px #3d314a, 1px -1px 0px #3d314a,
     -1px 1px 0px #3d314a;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.1s ease,
+    background 0.3s ease;
 }
 
 button:hover {
@@ -95,9 +96,10 @@ button:hover {
 }
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  /* outline: 4px auto -webkit-focus-ring-color; */
   background: linear-gradient(to top, #ff6300, #fac100);
   border-color: #fac100;
+  transform: scale(0.97);
 }
 
 button:disabled {
@@ -263,7 +265,7 @@ input[type="file"] {
 }
 
 .download-button:active {
-  transform: scale(0.95);
+  transform: scale(0.97);
 }
 
 .progress-message {
