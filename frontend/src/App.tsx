@@ -10,6 +10,7 @@ function App() {
   const [downloadLink, setDownloadLink] = useState<string | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
   const [showProgress, setShowProgress] = useState(false);
+  const [converting, setConverting] = useState(false);
 
   useEffect(() => {
     const ws = new WebSocket(import.meta.env.VITE_WS_URL);
@@ -18,6 +19,14 @@ function App() {
       const data = JSON.parse(event.data);
       if (data.progress !== undefined) {
         setProgress(data.progress);
+        setConverting(true);
+        setUploading(false);
+      }
+
+      // If conversion is complete
+      if (data.path) {
+        setDownloadLink(data.path);
+        setConverting(false);
       }
     };
 
@@ -55,6 +64,7 @@ function App() {
     }
 
     setUploading(true);
+    setConverting(false);
     setShowProgress(true);
     setMessage("");
     setDownloadLink(null);
@@ -63,33 +73,47 @@ function App() {
     const formData = new FormData();
     formData.append("videoFile", file);
 
-    try {
-      const response = await fetch("/api/upload/video", {
-        method: "POST",
-        body: formData,
-      });
+    // Skapa en XMLHttpRequest för att övervaka uppladdningen
+    const xhr = new XMLHttpRequest();
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setMessage(`Uppladdning lyckades: ${data.filename}`);
-        setDownloadLink(data.path);
-      } else {
-        setMessage(
-          `Fel: ${data.message}, Detaljer: ${JSON.stringify(data.error)}`
-        );
-        console.error("Serverfel:", data);
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const percentComplete = (event.loaded / event.total) * 100;
+        setProgress(percentComplete);
       }
-    } catch (error) {
-      console.error("Klientfel:", error);
-      setMessage(
-        `Något gick fel vid uppladdning: ${
-          error instanceof Error ? error.message : "Okänt fel"
-        }`
-      );
-    } finally {
+    };
+
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        // Upload is complete, now conversion starts
+        setUploading(false); // Set uploading to false to show "Konvertering" text
+        setConverting(true);
+        setProgress(0); // Reset progress for conversion phase
+
+        const data = JSON.parse(xhr.responseText);
+        setMessage(`Uppladdning lyckades: ${data.filename}`);
+
+        // Only set download link if it's available immediately
+        // Otherwise, it will likely be set by the WebSocket updates
+        if (data.path) {
+          setDownloadLink(data.path);
+          setConverting(false);
+        }
+      } else {
+        setMessage(`Fel vid uppladdning: ${xhr.statusText}`);
+        setUploading(false);
+        setConverting(false);
+      }
+    };
+
+    xhr.onerror = () => {
+      setMessage("Ett fel inträffade vid uppladdning.");
       setUploading(false);
-    }
+      setConverting(false);
+    };
+
+    xhr.open("POST", "/api/upload/video", true);
+    xhr.send(formData);
   };
 
   return (
@@ -128,15 +152,16 @@ function App() {
         {/* <input type="file" accept="video/*" onChange={handleFileChange} /> */}
 
         <button
+          type="button"
           onClick={handleUpload}
-          disabled={!!downloadLink || !file || uploading}
+          disabled={!!downloadLink || !file || uploading || converting}
         >
           {downloadLink
             ? "Färdig"
             : uploading
-            ? progress !== null
-              ? "Konverterar..."
-              : "Laddar upp..."
+            ? "Laddar upp..."
+            : converting
+            ? "Konverterar..."
             : "Ladda upp"}
         </button>
 
@@ -146,8 +171,12 @@ function App() {
           <div className="progress-text">
             {progress !== null && (
               <p>
-                Konverteringsprogress:{" "}
-                {downloadLink ? "100" : progress.toFixed(1)}%
+                {uploading
+                  ? "Uppladdning"
+                  : converting
+                  ? "Konvertering"
+                  : "Klar"}
+                : {downloadLink ? "100" : progress.toFixed(1)}%
               </p>
             )}
           </div>
