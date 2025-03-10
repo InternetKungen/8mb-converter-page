@@ -118,7 +118,7 @@ function App() {
 
   return (
     <div className="app">
-      <div className="logo">
+      <div className={`logo ${converting ? "animating" : ""}`}>
         <img
           className="logo-img"
           src={logoImage}
@@ -149,21 +149,25 @@ function App() {
           {file ? file.name : "Välj en fil"}
         </label>
 
-        {/* <input type="file" accept="video/*" onChange={handleFileChange} /> */}
-
-        <button
-          type="button"
-          onClick={handleUpload}
-          disabled={!!downloadLink || !file || uploading || converting}
-        >
-          {downloadLink
-            ? "Färdig"
-            : uploading
-            ? "Laddar upp..."
-            : converting
-            ? "Konverterar..."
-            : "Ladda upp"}
-        </button>
+        {downloadLink ? (
+          <div className="download-container">
+            <a href={downloadLink} download className="download-button">
+              ⬇ Hämta video
+            </a>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={handleUpload}
+            disabled={!file || uploading || converting}
+          >
+            {uploading
+              ? "Laddar upp..."
+              : converting
+              ? "Konverterar..."
+              : "Ladda upp"}
+          </button>
+        )}
 
         {/* Progress container med animation */}
         <div className={`progress-container ${showProgress ? "show" : ""}`}>
@@ -183,15 +187,6 @@ function App() {
         </div>
 
         <div className="progress-message">{message && <p>{message}</p>}</div>
-
-        {/* Visa nedladdningslänk om filen har konverterats */}
-        {downloadLink && (
-          <div className="download-container">
-            <a href={downloadLink} download className="download-button">
-              ⬇ Hämta video
-            </a>
-          </div>
-        )}
       </div>
     </div>
   );
