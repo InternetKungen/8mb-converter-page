@@ -89,10 +89,11 @@ const compressVideo = (inputPath, outputPath, maxSizeMb, maxDuration = 30) => {
         .audioBitrate("96k") // Standardisera ljudbitrate
         .videoBitrate(targetBitrate) // Använd beräknad bitrate
         .outputOptions([
-          "-preset slow", // Balans mellan komprimeringstid och -kvalitet
-          "-crf 28", // Högre värde = bättre kompression, sämre kvalitet
+          "-preset fast", // Balans mellan komprimeringstid och -kvalitet
+          "-crf 30", // Högre värde = bättre kompression, sämre kvalitet
           "-movflags +faststart", // Optimera för webbuppspelning
           "-pix_fmt yuv420p", // Standardisera pixelformat för bättre kompatibilitet
+          "-vf scale='min(1280,iw):-2'", // Begränsa upplösning till 1280px bredd
         ])
         .on("progress", (progress) => {
           console.log(`Behandlar: ${progress.percent}% färdig`);
