@@ -1,0 +1,12 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    ports:
+      - "${PORT}:${PORT}"
+    env_file:
+      - ./.env
+    environment:
+      - PORT=${PORT}
+      - VITE_WS_URL=${VITE_WS_URL}

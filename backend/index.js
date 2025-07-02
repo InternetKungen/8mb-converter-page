@@ -16,7 +16,7 @@ app.use("/public", express.static(path.resolve("public")));
 app.use("/api/upload", uploadRouter);
 
 // Servera statiska filer från dist-mappen
-const distPath = path.resolve("..", "frontend", "dist");
+const distPath = path.resolve("frontend", "dist");
 app.use(express.static(distPath));
 
 // Serve index.html på icke-API-vägar för att stödja SPA-routning
