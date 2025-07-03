@@ -61,7 +61,14 @@ const broadcastProgress = (progress) => {
 };
 
 // Funktion för att komprimera videon
-const compressVideo = (inputPath, outputPath, maxSizeMb, maxDuration = 30) => {
+const compressVideo = (
+  inputPath,
+  outputPath,
+  maxSizeMb,
+  startTime = 0,
+  endTime = null,
+  maxDuration = 30
+) => {
   return new Promise((resolve, reject) => {
     // Få information om ursprungsfilen för att beräkna bithastighet
     ffmpeg.ffprobe(inputPath, (err, metadata) => {
@@ -70,7 +77,26 @@ const compressVideo = (inputPath, outputPath, maxSizeMb, maxDuration = 30) => {
         return reject(err);
       }
 
-      const duration = Math.min(metadata.format.duration, maxDuration);
+      const originalDuration = metadata.format.duration;
+
+      // Beräkna faktisk duration baserat på start/sluttid
+      let duration;
+      if (endTime !== null) {
+        // Om både start och sluttid är specificerade
+        duration = Math.min(endTime - startTime, maxDuration);
+      } else {
+        // Om bara starttid är specificerad, använd maxDuration från starttid
+        duration = Math.min(originalDuration - startTime, maxDuration);
+      }
+
+      // Säkerställ att duration är positiv
+      if (duration <= 0) {
+        return reject(
+          new Error(
+            "Ogiltig tidsintervall: sluttid måste vara större än starttid"
+          )
+        );
+      }
       // Beräkna bitrate för att få ungefär maxSizeMb storlek
       // 8 * maxSizeMb * 1024 * 1024 = önskad filstorlek i bitar
       // Dividera med duration för att få bitar per sekund
@@ -78,11 +104,15 @@ const compressVideo = (inputPath, outputPath, maxSizeMb, maxDuration = 30) => {
         (8 * maxSizeMb * 1024 * 1024) / duration
       );
 
-      console.log(`Längd: ${duration}s, Målbitrate: ${targetBitrate}bps`);
+      console.log(
+        `Starttid: ${startTime}s, Sluttid: ${
+          endTime || "auto"
+        }s, Längd: ${duration}s, Målbitrate: ${targetBitrate}bps`
+      );
 
       ffmpeg(inputPath)
-        .setStartTime(0) // Starta från början
-        .setDuration(duration) // Klipp till maxDuration sekunder
+        .setStartTime(startTime) // Starta från specificerad tid
+        .setDuration(duration) // Klipp till beräknad duration
         .output(outputPath)
         .videoCodec("libx264") // Använd x264 för att komprimera
         .audioCodec("aac") // Komprimera ljudet med AAC
@@ -118,6 +148,21 @@ router.post("/video", videoUpload.single("videoFile"), async (req, res) => {
     return res.status(400).json({ message: "Ingen fil har laddats upp" });
   }
 
+  // Hämta start- och sluttid från request body
+  const startTime = parseFloat(req.body.startTime) || 0;
+  const endTime = req.body.endTime ? parseFloat(req.body.endTime) : null;
+
+  // Validera tidsintervall
+  if (startTime < 0) {
+    return res.status(400).json({ message: "Starttid kan inte vara negativ" });
+  }
+
+  if (endTime !== null && endTime <= startTime) {
+    return res
+      .status(400)
+      .json({ message: "Sluttid måste vara större än starttid" });
+  }
+
   // Sätt filens path
   const uploadedVideoPath = path.resolve(
     "public",
@@ -135,8 +180,15 @@ router.post("/video", videoUpload.single("videoFile"), async (req, res) => {
   );
 
   try {
-    // Komprimera videon
-    await compressVideo(uploadedVideoPath, outputVideoPath, 6, 30); // Maxstorlek 8MB
+    // Komprimera videon med anpassad start- och sluttid
+    await compressVideo(
+      uploadedVideoPath,
+      outputVideoPath,
+      6,
+      startTime,
+      endTime,
+      30
+    );
 
     res.json({
       message: "Video konverterad och uppladdad",

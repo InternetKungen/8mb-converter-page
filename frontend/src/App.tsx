@@ -11,6 +11,9 @@ function App() {
   const [progress, setProgress] = useState<number | null>(null);
   const [showProgress, setShowProgress] = useState(false);
   const [converting, setConverting] = useState(false);
+  const [startTime, setStartTime] = useState<string>("0");
+  const [endTime, setEndTime] = useState<string>("");
+  const [videoDuration, setVideoDuration] = useState<number | null>(null);
 
   useEffect(() => {
     const ws = new WebSocket(import.meta.env.VITE_WS_URL);
@@ -39,10 +42,41 @@ function App() {
     setShowProgress(false);
   }, [file]);
 
+  // Funktion för att få videolängd
+  const getVideoDuration = (file: File) => {
+    return new Promise<number>((resolve, reject) => {
+      const video = document.createElement("video");
+      video.preload = "metadata";
+
+      video.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(video.src);
+        resolve(video.duration);
+      };
+
+      video.onerror = () => {
+        reject(new Error("Kunde inte läsa videofilens metadata"));
+      };
+
+      video.src = URL.createObjectURL(file);
+    });
+  };
+
   // Hantera filer via drag & drop
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
-      setFile(acceptedFiles[0]);
+      const selectedFile = acceptedFiles[0];
+      setFile(selectedFile);
+
+      try {
+        const duration = await getVideoDuration(selectedFile);
+        setVideoDuration(duration);
+        // Sätt standardvärden för start/sluttid
+        setStartTime("0");
+        setEndTime(Math.min(duration, 30).toString());
+      } catch (error) {
+        console.error("Fel vid läsning av videolängd:", error);
+        setVideoDuration(null);
+      }
     }
   }, []);
 
@@ -51,15 +85,67 @@ function App() {
     accept: { "video/*": [".mp4", ".mov", ".avi", ".mkv", ".webm"] },
     maxFiles: 1,
   });
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     if (event.target.files && event.target.files.length > 0) {
-      setFile(event.target.files[0]);
+      const selectedFile = event.target.files[0];
+      setFile(selectedFile);
+
+      try {
+        const duration = await getVideoDuration(selectedFile);
+        setVideoDuration(duration);
+        // Sätt standardvärden för start/sluttid
+        setStartTime("0");
+        setEndTime(Math.min(duration, 30).toString());
+      } catch (error) {
+        console.error("Fel vid läsning av videolängd:", error);
+        setVideoDuration(null);
+      }
     }
+  };
+
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const validateTimeInputs = (): boolean => {
+    const start = parseFloat(startTime);
+    const end = endTime ? parseFloat(endTime) : null;
+
+    if (start < 0) {
+      setMessage("Starttid kan inte vara negativ");
+      return false;
+    }
+
+    if (videoDuration && start >= videoDuration) {
+      setMessage("Starttid kan inte vara längre än videons längd");
+      return false;
+    }
+
+    if (end !== null && end <= start) {
+      setMessage("Sluttid måste vara större än starttid");
+      return false;
+    }
+
+    if (end !== null && videoDuration && end > videoDuration) {
+      setMessage("Sluttid kan inte vara längre än videons längd");
+      return false;
+    }
+
+    return true;
   };
 
   const handleUpload = async () => {
     if (!file) {
       setMessage("Välj en fil först.");
+      return;
+    }
+
+    if (!validateTimeInputs()) {
       return;
     }
 
@@ -72,6 +158,10 @@ function App() {
 
     const formData = new FormData();
     formData.append("videoFile", file);
+    formData.append("startTime", startTime);
+    if (endTime) {
+      formData.append("endTime", endTime);
+    }
 
     // Skapa en XMLHttpRequest för att övervaka uppladdningen
     const xhr = new XMLHttpRequest();
@@ -148,6 +238,66 @@ function App() {
         <label htmlFor="file-upload" className="custom-file-upload">
           {file ? file.name : "Välj en fil"}
         </label>
+
+        {/* Visa videolängd och tid-kontroller */}
+        {file && videoDuration && (
+          <div className="time-controls">
+            <div className="video-info">
+              <p>Videolängd: {formatTime(videoDuration)}</p>
+            </div>
+
+            <div className="time-inputs">
+              <div className="time-input-group">
+                <label htmlFor="start-time">Starttid (sekunder):</label>
+                <input
+                  id="start-time"
+                  type="number"
+                  min="0"
+                  max={videoDuration}
+                  step="0.1"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  placeholder="0"
+                />
+              </div>
+
+              <div className="time-input-group">
+                <label htmlFor="end-time">Sluttid (sekunder, valfritt):</label>
+                <input
+                  id="end-time"
+                  type="number"
+                  min="0"
+                  max={videoDuration}
+                  step="0.1"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  placeholder={`Max ${Math.min(videoDuration, 30)}`}
+                />
+              </div>
+            </div>
+
+            <div className="time-preview">
+              <p>
+                Klippet blir: {formatTime(parseFloat(startTime))} -{" "}
+                {endTime
+                  ? formatTime(parseFloat(endTime))
+                  : formatTime(
+                      Math.min(videoDuration, parseFloat(startTime) + 30)
+                    )}{" "}
+                (
+                {endTime
+                  ? Math.max(
+                      0,
+                      parseFloat(endTime) - parseFloat(startTime)
+                    ).toFixed(1)
+                  : Math.min(30, videoDuration - parseFloat(startTime)).toFixed(
+                      1
+                    )}
+                s)
+              </p>
+            </div>
+          </div>
+        )}
 
         {downloadLink ? (
           <div className="download-container">
