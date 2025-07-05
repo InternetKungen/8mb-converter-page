@@ -11,4 +11,5 @@ services:
       - PORT=${PORT}
       # - VITE_WS_URL=${VITE_WS_URL}
     volumes:
-      - ./backend/public:/app/backend/public
+      - ${PUBLIC_DIR}:/app/backend/public
+    restart: unless-stopped

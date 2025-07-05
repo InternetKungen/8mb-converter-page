@@ -208,9 +208,33 @@ input[type="file"] {
   height: 80px;
   width: 100%;
 }
+.controls-progress-area {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  min-height: 0;
+  max-height: 0;
+  height: fit-content;
+  transition: min-height 0.5s ease-in-out, opacity 0.5s ease-in-out,
+    max-height 0.5s ease-in-out;
+  margin-bottom: 20px;
+  opacity: 0;
+}
+
+.controls-progress-area.show {
+  min-height: 20px;
+  max-height: 100px;
+  opacity: 1;
+  transition: min-height 0.5s ease-in-out, opacity 0.5s ease-in-out,
+    max-height 0.5s ease-in-out;
+}
 
 .progress-container {
-  position: relative;
+  position: absolute;
   width: 100%;
   height: 20px;
   background: #3d314a;
@@ -219,11 +243,14 @@ input[type="file"] {
   margin-top: 10px;
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.5s ease-in-out;
+  opacity: 0;
+  transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out;
 }
 
 .progress-container.show {
   max-height: 100px;
+  opacity: 1;
+  transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out;
 }
 
 .progress-bar {
@@ -286,92 +313,293 @@ input[type="file"] {
 }
 
 .progress-message {
+  position: absolute;
+  bottom: calc((100vh - 500px) / 2 - 55px);
   text-align: center;
-  /* margin-top: 10px; */
   font-weight: regular;
   color: white;
-  /* text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); */
   font-size: 14px;
+  border: 2px solid #0296a2;
+  border-radius: 10px;
+  background: linear-gradient(to top, #3d314a, #0296a2);
+  padding: 10px;
+  width: 500px;
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease-in-out, max-height 0.5s ease-in-out,
+    transform 0.5s ease-in-out;
+}
+
+.progress-message.show {
+  opacity: 1;
+  max-height: 100px;
+  transform: translateY(0);
 }
 
 .time-controls {
-  margin: 20px 0;
-  padding: 20px;
-  background: #f5f5f5;
-  border-radius: 8px;
-  border: 2px dashed #ddd;
+  padding: 0px;
+  background: transparent;
+  border-radius: 10px;
+  width: 100%;
+  /* transform: scale(1); */
+  transition: max-height 0.5s ease-in-out, transform 0.5s ease-in-out,
+    opacity 0.5s ease-in-out;
+  position: absolute;
+  overflow: hidden;
+  /* margin-bottom: 10px; */
+  margin-top: 10px;
+  max-height: 0;
+  opacity: 0;
+  transform: scaleY(0);
 }
 
-.video-info {
-  margin-bottom: 15px;
-  text-align: center;
+.time-controls.disabled {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transform: scaleY(0);
+  transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out,
+    transform 0.5s ease-in-out;
 }
 
-.video-info p {
-  margin: 0;
-  font-weight: bold;
-  color: #333;
+.time-controls.show {
+  max-height: 100px;
+  opacity: 1;
+  overflow: visible;
+  transform: scaleY(1);
+  transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out,
+    transform 0.5s ease-in-out;
 }
 
-.time-inputs {
+.time-slider-container {
+  margin: 5px 0;
+}
+
+.dual-range-slider {
+  position: relative;
+  height: 40px;
+  /* margin-bottom: 10px; */
+}
+
+.slider-track {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: #3d314a;
+  border-radius: 10px;
+  transform: translateY(-50%);
+}
+
+.slider-range {
+  position: absolute;
+  top: 50%;
+  height: 20px;
+  background: linear-gradient(to left, #ff6300, #fac100);
+  border-radius: 10px;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+.slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  background: transparent;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.slider::-webkit-slider-thumb {
+  pointer-events: auto;
+}
+
+.slider::-moz-range-thumb {
+  pointer-events: auto;
+}
+
+.slider-start {
+  z-index: 3;
+}
+
+.slider-end {
+  z-index: 2;
+}
+
+/* Dynamisk z-index baserat på position */
+.dual-range-slider:hover .slider-start {
+  z-index: 4;
+}
+
+.dual-range-slider .slider-end:hover {
+  z-index: 4;
+}
+
+/* Förbättra hover-området */
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #fac100;
+  border-radius: 50%;
+  border: 1px solid #fd9200;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 10;
+}
+
+.slider::-webkit-slider-thumb:hover {
+  background: #ff6300;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: #fac100;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 10;
+}
+
+.slider::-moz-range-thumb:hover {
+  background: #ff6300;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.slider::-moz-range-track {
+  background: transparent;
+  border: none;
+  height: 6px;
+}
+
+.slider-start::-webkit-slider-thumb {
+  background: #fac100;
+}
+
+.slider-start::-webkit-slider-thumb:hover {
+  background: #fac100;
+  outline: 4px double #ff6300;
+  box-shadow: 0 0 20px #ff6300;
+}
+
+.slider-start::-moz-range-thumb {
+  background: #fac100;
+}
+
+.slider-start::-moz-range-thumb:hover {
+  background: #fac100;
+  outline: 4px double #ff6300;
+  box-shadow: 0 0 20px #ff6300;
+}
+
+.slider-end::-webkit-slider-thumb {
+  background: #ff6300;
+}
+
+.slider-end::-webkit-slider-thumb:hover {
+  background: #ff6300;
+  outline: 4px double #fac100;
+  box-shadow: 0 0 20px #fac100;
+}
+
+.slider-end::-moz-range-thumb {
+  background: #ff6300;
+}
+
+.slider-end::-moz-range-thumb:hover {
+  background: #ff6300;
+  outline: 4px double #fac100;
+  box-shadow: 0 0 20px #fac100;
+}
+
+.time-values {
   display: flex;
-  gap: 20px;
-  margin-bottom: 15px;
-  justify-content: center;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0px;
+  padding: 0 0.5px;
+  position: absolute;
+  bottom: 15px;
+  left: 0;
+  width: 100%;
+  opacity: 0;
+  transform: translateY(100px), scale(0);
+  transition: opacity 0.7s ease-in-out 0.1s, transform 0.7s ease-in-out 0.4s;
 }
 
-.time-input-group {
+.time-value {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 200px;
+  gap: 4px;
 }
 
-.time-input-group label {
-  font-size: 14px;
-  margin-bottom: 5px;
-  color: #666;
-  font-weight: 500;
+.time-value label {
+  font-size: 8px;
+  font-weight: 600;
+  color: #ffffff;
+  text-shadow: 1px 1px 0px #ff6300, -1px -1px 0px #ff6300, 1px -1px 0px #ff6300,
+    -1px 1px 0px #ff6300;
+  text-transform: uppercase;
+  letter-spacing: 3.5px;
+  opacity: 0.8;
 }
 
-.time-input-group input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+.time-value span {
   font-size: 16px;
+  font-weight: bold;
+  color: #ffffff;
+  text-shadow: 1px 1px 0px #ff6300, -1px -1px 0px #ff6300, 1px -1px 0px #ff6300,
+    -1px 1px 0px #ff6300;
+  border-radius: 4px 4px 0 0;
+  min-width: 60px;
   text-align: center;
+  padding-bottom: 9px;
 }
 
-.time-input-group input:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+.time-value:first-child span {
+  border-left: 3px solid #fac100;
+  /* background: linear-gradient(to right, #3d314a, transparent); */
+}
+
+.time-value:last-child span {
+  border-right: 3px solid #ff6300;
 }
 
 .time-preview {
   text-align: center;
-  padding: 10px;
-  background: #e9ecef;
-  border-radius: 4px;
-  margin-top: 10px;
+  padding: 15px;
+  background: transparent;
+  border-radius: 6px;
+  margin-top: 0px;
 }
 
-.time-preview p {
-  margin: 0;
-  font-size: 14px;
-  color: #495057;
+.time-preview span {
+  font-size: 11px;
 }
 
-/* Responsiv design för mobiler */
-@media (max-width: 768px) {
-  .time-inputs {
-    flex-direction: column;
-    gap: 15px;
-  }
-
-  .time-input-group {
-    min-width: 100%;
-  }
+/* Visa time-values när time-controls visas */
+.time-controls.show .time-values {
+  opacity: 1;
+  transform: translateY(0), scale(1);
+  transition: opacity 0.7s ease-in-out 0.4s, transform 0.7s ease-in-out 0.4s;
 }

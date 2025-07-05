@@ -239,66 +239,6 @@ function App() {
           {file ? file.name : "Välj en fil"}
         </label>
 
-        {/* Visa videolängd och tid-kontroller */}
-        {file && videoDuration && (
-          <div className="time-controls">
-            <div className="video-info">
-              <p>Videolängd: {formatTime(videoDuration)}</p>
-            </div>
-
-            <div className="time-inputs">
-              <div className="time-input-group">
-                <label htmlFor="start-time">Starttid (sekunder):</label>
-                <input
-                  id="start-time"
-                  type="number"
-                  min="0"
-                  max={videoDuration}
-                  step="0.1"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  placeholder="0"
-                />
-              </div>
-
-              <div className="time-input-group">
-                <label htmlFor="end-time">Sluttid (sekunder, valfritt):</label>
-                <input
-                  id="end-time"
-                  type="number"
-                  min="0"
-                  max={videoDuration}
-                  step="0.1"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  placeholder={`Max ${Math.min(videoDuration, 30)}`}
-                />
-              </div>
-            </div>
-
-            <div className="time-preview">
-              <p>
-                Klippet blir: {formatTime(parseFloat(startTime))} -{" "}
-                {endTime
-                  ? formatTime(parseFloat(endTime))
-                  : formatTime(
-                      Math.min(videoDuration, parseFloat(startTime) + 30)
-                    )}{" "}
-                (
-                {endTime
-                  ? Math.max(
-                      0,
-                      parseFloat(endTime) - parseFloat(startTime)
-                    ).toFixed(1)
-                  : Math.min(30, videoDuration - parseFloat(startTime)).toFixed(
-                      1
-                    )}
-                s)
-              </p>
-            </div>
-          </div>
-        )}
-
         {downloadLink ? (
           <div className="download-container">
             <a href={downloadLink} download className="download-button">
@@ -319,24 +259,132 @@ function App() {
           </button>
         )}
 
-        {/* Progress container med animation */}
-        <div className={`progress-container ${showProgress ? "show" : ""}`}>
-          <div className="progress-bar" style={{ width: `${progress}%` }}></div>
-          <div className="progress-text">
-            {progress !== null && (
-              <p>
-                {uploading
-                  ? "Uppladdning"
-                  : converting
-                  ? "Konvertering"
-                  : "Klar"}
-                : {downloadLink ? "100" : progress.toFixed(1)}%
-              </p>
-            )}
+        {/* Time Controls och Progress container på samma område */}
+        <div className={`controls-progress-area ${file ? "show" : ""}`}>
+          {/* Visa videolängd och tid-kontroller */}
+          {file && videoDuration && !downloadLink && (
+            <div
+              className={`time-controls ${
+                uploading || converting ? "disabled" : "show"
+              }`}
+            >
+              <div className="time-slider-container">
+                <div className="time-values">
+                  <div className="time-value">
+                    <label>Start</label>
+                    <span>{formatTime(parseFloat(startTime))}</span>
+                  </div>
+
+                  <div className="time-preview time-value">
+                    <label>Tid</label>
+                    <span>
+                      {endTime
+                        ? Math.max(
+                            0,
+                            parseFloat(endTime) - parseFloat(startTime)
+                          ).toFixed(1)
+                        : Math.min(
+                            30,
+                            videoDuration - parseFloat(startTime)
+                          ).toFixed(1)}
+                    </span>
+                  </div>
+
+                  <div className="time-value">
+                    <label>Slut</label>
+                    <span>
+                      {formatTime(
+                        parseFloat(endTime) ||
+                          Math.min(videoDuration, parseFloat(startTime) + 30)
+                      )}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="dual-range-slider">
+                  <div className="slider-track"></div>
+                  <div
+                    className="slider-range"
+                    style={{
+                      left: `${(parseFloat(startTime) / videoDuration) * 100}%`,
+                      width: `${
+                        (((parseFloat(endTime) ||
+                          Math.min(videoDuration, parseFloat(startTime) + 30)) -
+                          parseFloat(startTime)) /
+                          videoDuration) *
+                        100
+                      }%`,
+                    }}
+                  ></div>
+
+                  <input
+                    type="range"
+                    min="0"
+                    max={videoDuration}
+                    step="0.1"
+                    value={startTime}
+                    onChange={(e) => {
+                      const newStartTime = parseFloat(e.target.value);
+                      const currentEndTime =
+                        parseFloat(endTime) ||
+                        Math.min(videoDuration, newStartTime + 30);
+                      if (newStartTime < currentEndTime) {
+                        setStartTime(e.target.value);
+                      }
+                    }}
+                    className="slider slider-start"
+                  />
+
+                  <input
+                    type="range"
+                    min="0"
+                    max={videoDuration}
+                    step="0.1"
+                    value={
+                      endTime ||
+                      Math.min(videoDuration, parseFloat(startTime) + 30)
+                    }
+                    onChange={(e) => {
+                      const newEndTime = parseFloat(e.target.value);
+                      const currentStartTime = parseFloat(startTime);
+                      if (newEndTime > currentStartTime) {
+                        setEndTime(e.target.value);
+                      }
+                    }}
+                    className="slider slider-end"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Progress container med animation */}
+          <div className={`progress-container ${showProgress ? "show" : ""}`}>
+            <div
+              className="progress-bar"
+              style={{ width: `${progress}%` }}
+            ></div>
+            <div className="progress-text">
+              {progress !== null && (
+                <p>
+                  {uploading
+                    ? "Uppladdning"
+                    : converting
+                    ? "Konvertering"
+                    : "Klar"}
+                  : {downloadLink ? "100" : progress.toFixed(1)}%
+                </p>
+              )}
+            </div>
           </div>
         </div>
-
-        <div className="progress-message">{message && <p>{message}</p>}</div>
+        <div
+          className={`progress-message ${
+            message && downloadLink ? "show" : ""
+          }`}
+        >
+          <p>{message}</p>
+        </div>
       </div>
     </div>
   );
